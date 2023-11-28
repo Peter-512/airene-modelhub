@@ -4,11 +4,6 @@ stages:
 .test-template:
   stage: test
   image: python:3.9.6-slim-buster
-  tags:
-  - kubernetes-runner
-  - docker-runner
-  except:
-  - tags
   before_script:
   - pip install poetry==1.4.2
   - poetry config virtualenvs.create false
