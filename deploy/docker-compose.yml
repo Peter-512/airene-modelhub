@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+      target: prod
+    image: modelhub:${MODELHUB_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    environment:
+      MODELHUB_HOST: 0.0.0.0
+      MODELHUB_DB_FILE: /db_data/db.sqlite3
+    volumes:
+    - modelhub-db-data:/db_data/
+
+
+
+volumes:
+  modelhub-db-data:
+    name: modelhub-db-data
