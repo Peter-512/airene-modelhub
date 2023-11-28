@@ -57,6 +57,7 @@ modelhub
 ├── settings.py  # Main configuration settings for project.
 ├── static  # Static content.
 ├── tests  # Tests for project.
+├── core # Where all the logic lives
 └── web  # Package contains web server. Handlers, startup config.
     ├── api  # Package with all handlers.
     │   └── router.py  # Main router.

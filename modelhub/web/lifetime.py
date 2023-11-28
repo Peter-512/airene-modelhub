@@ -1,6 +1,7 @@
 from typing import Awaitable, Callable
 
 from fastapi import FastAPI
+from fastapi_restful.tasks import repeat_every
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from modelhub.db.meta import meta
@@ -56,6 +57,14 @@ def register_startup_event(
         await _create_tables()
         app.middleware_stack = app.build_middleware_stack()
         pass  # noqa: WPS420
+
+    @app.on_event("startup")
+    @repeat_every(seconds=10)
+    def _retrain_models() -> None:
+        """
+        Retrain models and add a .pickle file to Azure Blob Storage
+        """
+        print("Queue is working")
 
     return _startup
 
