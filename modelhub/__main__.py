@@ -13,7 +13,6 @@ def main() -> None:
             host=settings.host,
             port=settings.port,
             reload=settings.reload,
-            log_level=settings.log_level.value.lower(),
             factory=True,
         )
     else:
@@ -27,7 +26,6 @@ def main() -> None:
             workers=settings.workers_count,
             factory=True,
             accesslog="-",
-            loglevel=settings.log_level.value.lower(),
             access_log_format='%r "-" %s "-" %Tf',  # noqa: WPS323
         ).run()
 

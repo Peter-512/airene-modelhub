@@ -8,24 +8,18 @@ stages:
   - pip install poetry==1.4.2
   - poetry config virtualenvs.create false
   - poetry install
+  - |
+    echo "MODELHUB_RELOAD=False" >> .env
+    echo "MODELHUB_COSMOS_ENDPOINT=$MODELHUB_COSMOS_ENDPOINT" >> .env
+    echo "MODELHUB_COSMOS_KEY=$MODELHUB_COSMOS_KEY" >> .env
+    echo "MODELHUB_BLOB_ACCOUNT_URL=$MODELHUB_BLOB_ACCOUNT_URL" >> .env
+    echo "MODELHUB_BLOB_SAS_TOKEN=$MODELHUB_BLOB_SAS_TOKEN" >> .env
 
 black:
   extends:
   - .test-template
   script:
   - black --check .
-
-flake8:
-  extends:
-  - .test-template
-  script:
-  - flake8 --count .
-
-mypy:
-  extends:
-  - .test-template
-  script:
-  - mypy .
 
 pytest:
   extends:

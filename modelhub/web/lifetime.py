@@ -2,44 +2,14 @@ from typing import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi_restful.tasks import repeat_every
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from modelhub.db.meta import meta
-from modelhub.db.models import load_all_models
-from modelhub.settings import settings
-
-
-def _setup_db(app: FastAPI) -> None:  # pragma: no cover
-    """
-    Creates connection to the database.
-
-    This function creates SQLAlchemy engine instance,
-    session_factory for creating sessions
-    and stores them in the application's state property.
-
-    :param app: fastAPI application.
-    """
-    engine = create_async_engine(str(settings.db_url), echo=settings.db_echo)
-    session_factory = async_sessionmaker(
-        engine,
-        expire_on_commit=False,
-    )
-    app.state.db_engine = engine
-    app.state.db_session_factory = session_factory
-
-
-async def _create_tables() -> None:  # pragma: no cover
-    """Populates tables in the database."""
-    load_all_models()
-    engine = create_async_engine(str(settings.db_url))
-    async with engine.begin() as connection:
-        await connection.run_sync(meta.create_all)
-    await engine.dispose()
+from modelhub.core.predictions.ai_models.xgboost import XGBoostModel
+from modelhub.core.predictions.trainer import Trainer
 
 
 def register_startup_event(
     app: FastAPI,
-) -> Callable[[], Awaitable[None]]:  # pragma: no cover
+):  # pragma: no cover
     """
     Actions to run on application startup.
 
@@ -53,20 +23,25 @@ def register_startup_event(
     @app.on_event("startup")
     async def _startup() -> None:  # noqa: WPS430
         app.middleware_stack = None
-        _setup_db(app)
-        await _create_tables()
         app.middleware_stack = app.build_middleware_stack()
         pass  # noqa: WPS420
 
     @app.on_event("startup")
-    @repeat_every(seconds=10)
+    @repeat_every(seconds=604800)  # 1 week
     def _retrain_models() -> None:
         """
         Retrain models and add a .pickle file to Azure Blob Storage
         """
         print("Queue is working")
+        xgboost = XGBoostModel()
+        # isolation_forest = IsolationForestModel()
+        trainer = Trainer([xgboost])
+        print("Created models, training...")
+        trainer.train()
+        # trainer.evaluate() TODO: create logs and send them somewhere
+        print("Models have been retrained")
 
-    return _startup
+    return _startup, _retrain_models
 
 
 def register_shutdown_event(
@@ -81,8 +56,6 @@ def register_shutdown_event(
 
     @app.on_event("shutdown")
     async def _shutdown() -> None:  # noqa: WPS430
-        await app.state.db_engine.dispose()
-
         pass  # noqa: WPS420
 
     return _shutdown
