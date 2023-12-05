@@ -34,3 +34,5 @@ pytest:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+  after_script:
+    - rm .env
