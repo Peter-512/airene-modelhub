@@ -1,32 +1,35 @@
 stages:
-- "test"
+  - "test"
 
 .test-template:
   stage: test
   image: python:3.9.6-slim-buster
   before_script:
-  - pip install poetry==1.4.2
-  - poetry config virtualenvs.create false
-  - poetry install
-  - |
-    echo "MODELHUB_RELOAD=False" >> .env
-    echo "MODELHUB_COSMOS_ENDPOINT=$MODELHUB_COSMOS_ENDPOINT" >> .env
-    echo "MODELHUB_COSMOS_KEY=$MODELHUB_COSMOS_KEY" >> .env
-    echo "MODELHUB_BLOB_ACCOUNT_URL=$MODELHUB_BLOB_ACCOUNT_URL" >> .env
-    echo "MODELHUB_BLOB_SAS_TOKEN=$MODELHUB_BLOB_SAS_TOKEN" >> .env
+    - pip install poetry==1.4.2
+    - poetry config virtualenvs.create false
+    - poetry install
+    - |
+      echo "MODELHUB_RELOAD=False" >> .env
+      echo "MODELHUB_COSMOS_ENDPOINT=$MODELHUB_COSMOS_ENDPOINT" >> .env
+      echo "MODELHUB_COSMOS_KEY=$MODELHUB_COSMOS_KEY" >> .env
+      echo "MODELHUB_BLOB_ACCOUNT_URL=$MODELHUB_BLOB_ACCOUNT_URL" >> .env
+      echo "MODELHUB_BLOB_SAS_TOKEN=$MODELHUB_BLOB_SAS_TOKEN" >> .env
+      echo "MODELHUB_NAMESPACE_CONNECTION_STR=$MODELHUB_NAMESPACE_CONNECTION_STR" >> .env
+      echo "MODELHUB_ENTRY_QUEUE_NAME=$MODELHUB_ENTRY_QUEUE_NAME" >> .env
+      echo "MODELHUB_OUTPUT_QUEUE_NAME=$MODELHUB_OUTPUT_QUEUE_NAME" >> .env
 
 black:
   extends:
-  - .test-template
+    - .test-template
   script:
-  - black --check .
+    - black --check .
 
 pytest:
   extends:
-  - .test-template
+    - .test-template
   script:
-  - pytest -vv --junitxml=report.xml --cov="modelhub" .
-  - coverage xml
+    - pytest -vv --junitxml=report.xml --cov="modelhub" .
+    - coverage xml
   artifacts:
     when: always
     reports:
