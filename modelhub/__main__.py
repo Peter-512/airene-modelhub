@@ -1,3 +1,5 @@
+import logging
+
 import uvicorn
 
 from modelhub.gunicorn_runner import GunicornApplication
@@ -6,6 +8,7 @@ from modelhub.settings import settings
 
 def main() -> None:
     """Entrypoint of the application."""
+    logging.basicConfig(level=logging.INFO)
     if settings.reload:
         uvicorn.run(
             "modelhub.web.application:get_app",
@@ -14,11 +17,12 @@ def main() -> None:
             port=settings.port,
             reload=settings.reload,
             factory=True,
+            log_level="info",
         )
     else:
         # We choose gunicorn only if reload
         # option is not used, because reload
-        # feature doen't work with Uvicorn workers.
+        # feature doesn't work with Uvicorn workers.
         GunicornApplication(
             "modelhub.web.application:get_app",
             host=settings.host,

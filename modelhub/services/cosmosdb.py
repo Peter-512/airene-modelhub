@@ -1,7 +1,7 @@
-import json
 import logging
 import os
 
+import pandas as pd
 from azure.cosmos import CosmosClient, PartitionKey
 from dotenv import load_dotenv
 
@@ -33,5 +33,5 @@ class CosmosDBAccessPoint:
             enable_cross_partition_query=True,
         )
         items = [item for item in results]
-        print("Query complete")
-        return json.dumps(items, indent=True)
+        df = pd.DataFrame(items)
+        return df

@@ -1,16 +1,20 @@
 from xgboost import XGBRegressor
 
 from modelhub.core.predictions.ai_models.model import Model
-from modelhub.core.preprocessor.prediction_preprocessor import PredictionPreprocessor
+from modelhub.core.preprocessor.regressor_preprocessor import RegressorPreprocessor
 
 
-class XGBoostModel(Model):
-    def __init__(self, preprocessor=PredictionPreprocessor()):
+class XGBoostRegressorModel(Model):
+    """
+    XGBoost Regressor model
+    """
+
+    def __init__(self, preprocessor=RegressorPreprocessor()):
         super().__init__()
         self.model = XGBRegressor()
         self.preprocessor = preprocessor
 
-    def train(self, X_train, y_train, X_test, y_test):
+    def fit(self, X_train, y_train, X_test, y_test):
         # def objective(trial):
         #     param = {
         #         "verbosity": 0,
@@ -37,7 +41,4 @@ class XGBoostModel(Model):
         # study.optimize(objective, n_trials=100)
 
         # self.model = XGBRegressor(**study.best_params)
-        self.model.fit(X_train, y_train, eval_set=[(X_test, y_test)])
-
-    def predict(self, X):
-        return self.model.predict(X)
+        self.model.fit(X_train, y_train, eval_set=[(X_test, y_test)], verbose=False)

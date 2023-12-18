@@ -3,10 +3,14 @@ from typing import Awaitable, Callable
 from fastapi import FastAPI
 from fastapi_restful.tasks import repeat_every
 
-from modelhub.core.predictions.ai_models.xgboost import XGBoostModel
+from modelhub.core.predictions.ai_models.xgboost import XGBoostRegressorModel
+from modelhub.core.predictions.ai_models.xgboost_classifier import (
+    XGBoostClassifierModel,
+)
 from modelhub.core.predictions.predictor import Predictor
 from modelhub.core.predictions.trainer import Trainer
 from modelhub.services.busservice import BusServiceAccessPoint
+from modelhub.static.utils import format_predictions_for_queue
 
 
 def register_startup_event(
@@ -21,8 +25,6 @@ def register_startup_event(
     :param app: the fastAPI application.
     :return: function that actually performs actions.
     """
-    bus_service_ap = BusServiceAccessPoint()
-    predictor = Predictor()
 
     @app.on_event("startup")
     async def _startup() -> None:  # noqa: WPS430
@@ -36,14 +38,11 @@ def register_startup_event(
         """
         Retrain models and add a .pickle file to Azure Blob Storage
         """
-        print("Queue is working")
-        xgboost = XGBoostModel()
-        # isolation_forest = IsolationForestModel()
-        trainer = Trainer([xgboost])
-        print("Created models, training...")
+        xgboost = XGBoostRegressorModel()
+        xgboost_classifier = XGBoostClassifierModel()
+        trainer = Trainer([xgboost, xgboost_classifier])
         trainer.train()
-        # trainer.evaluate() TODO: create logs and send them somewhere
-        print("Models have been retrained")
+        print("Models retrained")
 
     @app.on_event("startup")
     @repeat_every(seconds=600)  # 10 minutes
@@ -51,14 +50,18 @@ def register_startup_event(
         """
         Listen to the queue and predict values
         """
-        print("Receiving messages...")
-        aggregated_messages = await bus_service_ap.receive_messages()
-        print("Predicting...")
-        messages_with_predictions = predictor.predict_batch(aggregated_messages)
-        print("Sending messages...")
-        await bus_service_ap.send_message(messages_with_predictions)
+        bus_service_ap = BusServiceAccessPoint()
+        predictor = Predictor()
+        # TODO: 50 is a test number so the queue doesn't explode
+        aggregated_messages = await bus_service_ap.receive_messages(n=50)
+        predictions = predictor.predict_batch(aggregated_messages)
+        formatted_predictions = format_predictions_for_queue(
+            predictions,
+            aggregated_messages,
+        )
+        await bus_service_ap.send_messages(formatted_predictions)
 
-    return _startup, _retrain_models, _listen_to_queue
+    return _startup, _listen_to_queue, _retrain_models
 
 
 def register_shutdown_event(

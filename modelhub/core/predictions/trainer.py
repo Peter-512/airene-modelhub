@@ -1,7 +1,5 @@
 from typing import List
 
-import pandas as pd
-
 from modelhub.core.predictions.ai_models.model import Model
 from modelhub.services.cosmosdb import CosmosDBAccessPoint
 
@@ -14,15 +12,14 @@ class Trainer:
 
     def train(self):
         if self.debug_data is None:
-            data = self.retrieve_data()
-            df = pd.read_json(data)
+            df = self.retrieve_data()
         else:
             df = self.debug_data
 
         for model in self.models:
-            X_train, X_test, y_train, y_test = model.preprocessor.preprocess(df)
-            model.train(X_train, y_train, X_test, y_test)
-            model.evaluate(X_test, y_test)
+            X_train, y_train, X_test, y_test = model.preprocessor.preprocess(df)
+            model.fit(X_train, y_train, X_test, y_test)
+            # model.evaluate(X_test, y_test)
             model.save()
 
     def retrieve_data(self):

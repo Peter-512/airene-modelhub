@@ -6,6 +6,7 @@ from datetime import date
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+from modelhub.models.model_type import ModelType
 from modelhub.services.blobstorage import BlobStorageAccessPoint
 
 
@@ -19,25 +20,29 @@ class Model(ABC):
         self.model = None
         self.preprocessor = None
         self.blobap = BlobStorageAccessPoint()
+        self.type: ModelType | None = None
         os.makedirs(self.model_path, exist_ok=True)
 
     @abstractmethod
-    def train(self, X_train, y_train, X_test, y_test):
+    def fit(self, X_train, y_train, X_test, y_test):
         print(f"Training {self.__class__.__name__}")
 
-    @abstractmethod
     def predict(self, X):
-        pass
+        print(f"{self.__class__.__name__} is predicting...")
+        try:
+            predictions = self.model.predict(X)
+        except Exception as e:
+            print(e)
+            predictions = np.zeros(len(X))
+        return predictions
 
     def save(self):
-        print("Saving model")
         file_name = os.path.join(
             self.model_path,
             f"{self.__class__.__name__}_{date.today()}.pkl",
         )
         pickle.dump(self.model, open(file_name, "wb"))
         self.blobap.upload_blob(file_name)
-        print("Model saved at ", file_name)
 
     def evaluate(self, X_test, y_test):
         """

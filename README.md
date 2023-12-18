@@ -1,6 +1,5 @@
 # modelhub
 
-
 ## Poetry
 
 This project uses poetry. It's a modern dependency management
@@ -24,23 +23,17 @@ You can read more about poetry here: https://python-poetry.org/
 You can start the project with docker using this command:
 
 ```bash
-docker-compose -f deploy/docker-compose.yml --project-directory . up --build
+docker build -t modelhub .
+docker run -p 8000:8000 modelhub
 ```
 
-If you want to develop in docker with autoreload add `-f deploy/docker-compose.dev.yml` to your docker command.
-Like this:
+## Deployment
 
-```bash
-docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . up --build
-```
+- `az webapp create --resource-group int5 --plan modelhub --name modelhub --multicontainer-config-type compose --multicontainer-config-file deploy/docker-compose.yml`
 
-This command exposes the web application on port 8000, mounts current directory and enables autoreload.
-
-But you have to rebuild image every time you modify `poetry.lock` or `pyproject.toml` with this command:
-
-```bash
-docker-compose -f deploy/docker-compose.yml --project-directory . build
-```
+We are deploying on azure, on plan B1.
+This is a highly scalable part of the application where a lot of the important
+prediction and classification logic resides.
 
 ## Project structure
 
@@ -75,21 +68,25 @@ All environment variables should start with "MODELHUB_" prefix.
 
 For example if you see in your "modelhub/settings.py" a variable named like
 `random_parameter`, you should provide the "MODELHUB_RANDOM_PARAMETER"
-variable to configure the value. This behaviour can be changed by overriding `env_prefix` property
+variable to configure the value. This behaviour can be changed by
+overriding `env_prefix` property
 in `modelhub.settings.Settings.Config`.
 
 An example of .env file:
+
 ```bash
 MODELHUB_RELOAD="True"
 MODELHUB_PORT="8000"
 MODELHUB_ENVIRONMENT="dev"
 ```
 
-You can read more about BaseSettings class here: https://pydantic-docs.helpmanual.io/usage/settings/
+You can read more about BaseSettings class
+here: https://pydantic-docs.helpmanual.io/usage/settings/
 
 ## Pre-commit
 
 To install pre-commit simply run inside the shell:
+
 ```bash
 pre-commit install
 ```
@@ -98,13 +95,12 @@ pre-commit is very useful to check your code before publishing it.
 It's configured using .pre-commit-config.yaml file.
 
 By default it runs:
+
 * black (formats your code);
 * mypy (validates types);
 * isort (sorts imports in all files);
 
-
 You can read more about pre-commit here: https://pre-commit.com/
-
 
 ## Running tests
 
@@ -117,8 +113,8 @@ docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --p
 
 For running tests on your local machine.
 
-
 2. Run the pytest.
+
 ```bash
 pytest -vv .
 ```
